@@ -1,0 +1,130 @@
+<html>
+
+<head>
+
+<title>657.000 Lab 4</title>
+<link rel="stylesheet" type="text/css" href="657.000.css">
+<link rel="stylesheet" type="text/css" href="sidenav.css">
+<script type="text/javascript" src="sidenav.js"></script>
+
+<body>
+
+<div id="mySidenav" class="sidenav">
+<a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+</div>
+
+<div id="main">
+
+<div class="labtitle">Lab 4&ensp;Marker Gene Metagenomics</div>
+<div class="subtitle">657.000&ensp;High-Throughput Sequence Data Handling (SS 2017)</div>
+
+<span id="contents" onclick="openNav()">
+<span style="font-size:125%">&#9776;</span>&ensp;Contents
+</span>
+
+<div class="usectitle">Setup</div>
+<hr>
+<ol>
+  <li>In your Linux home directory, make a new directory called <kbd>lab4</kbd>. Do all your work in <kbd>lab4</kbd>.
+  <li>Copy all files in the <kbd>/export/data/657.000/mgmg</kbd> directory that ends with <kbd>.pl</kbd> (4 of them) to your <kbd>lab4</kbd> directory. Use <kbd>/export/data/657.000/mgmg/*.pl</kbd> to refer to those files together. These are Perl scripts to run various USEARCH, VSEARCH, and mothur programs.
+  <li>Copy <kbd>/export/data/657.000/mgmg/tax2krona.sh</kbd> to your <kbd>lab4</kbd> directory. This is a shell script to produce visualizations taxonomic assignments.
+  <li>The example Illumina MiSeq paired-end 16S reads are in <kbd>/export/data/657.000/mgmg/reads</kbd>, but do not copy them. These are from 19 mouse feces samples collected on different days, grouped into 9 early and 10 late time points, to investigate variation in the gut microbiome.
+</ol>
+
+<div id="otus" class="sectitle">OTU clustering</div>
+<hr>
+<ol>
+  <li>Find the total number of lines in all the sample FASTQ files with the command below, and then calculate the total number of read pairs:
+<p>
+<table class="command"><tr><td><pre>
+wc -l /export/data/657.000/mgmg/reads/*.fastq
+</pre></table>
+  <li>In your <kbd>lab4</kbd> directory, run the pipeline below to cluster those 16S reads into OTUs with 97% similarity threshold:
+<p>
+<table class="command"><tr><td><pre>
+./otus.pl -fastqin_dir /export/data/657.000/mgmg/reads |& tee otus/logs/all.log
+</pre></table>
+  <li>The output sequences and tables from the pipeline are in the <kbd>otus</kbd> directory, and the log files are in the <kbd>otus/logs</kbd> directory. Trace how the reads have been processed, by filling in the &ldquo;Output count&rdquo; column of the table below. For the &ldquo;OTU clustering&rdquo; stage, the count should be the number of reads mapped to an OTU. Use relevant log files, but also look in the <kbd>all.log</kbd> if necessary.
+<p>
+<table>
+<tr>
+  <th>Stage
+  <th>Input &#10140; Output
+  <th>Output count
+  <th>Log file
+<tr>
+  <td>Pair merging
+  <td>Read pairs &#10140; Merged reads (<kbd>merged.fq</kbd>)
+  <td>
+  <td><kbd>merge.log</kbd>
+<tr>
+  <td>Quality filtering
+  <td>Merged reads &#10140; Filtered reads (<kbd>filtered.fa</kbd>)
+  <td>
+  <td><kbd>filter.log</kbd>
+<tr>
+  <td>Dereplication
+  <td>Filtered reads &#10140; Unique reads (<kbd>uniques.fa</kbd>)
+  <td>
+  <td><kbd>uniques.log</kbd>
+<tr>
+  <td>OTU clustering
+  <td>Unique reads &#10140; OTU sequences (<kbd>otus.fa</kbd>)
+  <td>
+  <td><kbd>cluster_otus.log</kbd>
+<tr>
+  <td>Mapping of<br>reads to OTUs
+  <td>OTU sequences <i>and</i> Merged reads &#10140;<br>Read-to-OTU mapping (<kbd>read2otu.txt</kbd>) <i>and</i><br>OTU tables (<kbd>otutab.txt</kbd>, <kbd>otutab.shared</kbd>,<kbd>otutab.json</kbd>)
+</table>
+  <li>Go to the <kbd>otus</kbd> directory and view the contents of the OTU table <kbd>otutab.txt</kbd> with the <kbd>less -S</kbd> command. Use arrow keys to scroll left and right. In the table, what do the rows, columns, and cells of the table indicate?
+  <li>The OTU table is derived from the mapping of reads to OTUs, as shown in <kbd>read2otu.txt</kbd>. What do the three things in a row of this file represent?
+</ol>
+
+<div id="div" class="sectitle">Community diversity analysis</div>
+<hr>
+<ol>
+  <li>We now use the OTU table to analyze the diversity of communities. In <kbd>lab4</kbd>, run the pipeline below to perform several types of diversity analysis:
+<p>
+<table class="command"><tr><td><pre>
+./div.pl -otuin_dir otus -design /export/data/657.000/mgmg/reads/mouse.time.design
+</pre></table>
+  <li>Go to the <kbd>div</kbd> directory, and view the contents of <kbd>otutab.groups.summary</kbd>. This file lists calculated &lsquo;alpha diversity&rsquo; measures for individual samples. The <kbd>sobs</kbd> column shows the numbers of &lsquo;observed species&rsquo;, but they are actually counts of OTUs found in the samples. Which sample has the highest number of OTUs? Which one has the lowest number of OTUs?
+  <li>Go back to your <kbd>lab4</kbd> directory, and generate visualizations of some of the diversity measures with the command:
+<p>
+<table class="command"><tr><td><pre>
+./viz.pl -divin_dir div
+</pre></table>
+  <li>Go to the <kbd>viz</kbd> directory, and load the index of the HTML files in your Web browser. If you are using Firefox, you can do this on the command line with <kbd>firefox .</kbd>. If you are using Chromium, run <kbd>chromium-browser .</kbd>.
+  <li>View <kbd>reads.html</kbd> showing the number of reads mapped to an OTU from each sample. What is the range of read numbers among all samples?
+  <li>View <kbd>rarefaction.html</kbd> showing the number of OTUs found versus the number of reads sampled. Which samples show a relatively high rate of increase in OTU numbers as more reads are sampled? List top three. You can select any region of the plot with the mouse to zoom into it.
+  <li>View <kbd>richness.html</kbd> showing community richness expressed by the numbers of OTUs observed or estimated. What are two samples with the highest richness estimates by both &ldquo;Exp(Shannon)&rdquo; and &ldquo;1/Simpson&rdquo;? Do they also have the highest number of observed OTUs?
+  <li>View <kbd>evenness.html</kbd> showing evenness of community composition. What are the most even and least even samples according to &ldquo;Simpson evenness&rdquo;? What would those be if we used &ldquo;Shannon evenness&rdquo; instead?
+  <li>View <kbd>bray_curtis.nmds.html</kbd>, which is a 2-dimensional non-metric multidimensional scaling (NMDS) plot using Bray-Curtis dissimilarity measures between the samples. Do you see natural clusters of early (F3D0 to F3D9) samples and late (F3D141 to F3D150) samples?
+  <li>View <kbd>jaccard.nmds.html</kbd>, another NMDS plot based on Jaccard dissimilarity measures. Is there a striking difference from the Bray-Curtis NMDS plot? Remember the axis order (Axis 1 or Axis 2) and the signs (positive or negative) of the values are irrelevant to the interpretation.
+</ol>
+
+<div id="div" class="sectitle">Taxonomic classification</div>
+<hr>
+<ol>
+  <li>In <kbd>lab4</kbd>, run the pipeline below to perform taxonomic classification, which will map OTUs to taxa:
+<p>
+<table class="command"><tr><td><pre>
+./tax.pl -otuin_dir otus -design /export/data/657.000/mgmg/reads/mouse.time.design
+</pre></table>
+  <li>Go to the <kbd>tax</kbd> directory, and view the contents of <kbd>taxtab.txt</kbd> with <kbd>less -S</kbd>. For each taxon row, this table lists the numbers of reads in the samples that map to this taxon. Find the two most abundant taxa in sample F3D141 with this command:
+<p>
+<table class="command"><tr><td><pre>
+cut -f1,3 taxtab.txt | sort -nk2
+</pre></table>
+  <li>The table in <kbd>taxtab_design.txt</kbd> lists the same kind of information as in <kbd>taxtab.txt</kbd>, only for sample groups (as defined in <kbd>/export/data/657.000/mgmg/reads/mouse.time.design</kbd>) instead of individual samples. Find the most abundant taxon in the early sample group.
+  <li>We now visually compare the taxonomic composition of the early and late sample groups. Go back to <kbd>lab4</kbd> and run the command below to generate Krona visualizations:
+<p>
+<table class="command"><tr><td><pre>
+./tax2krona.sh
+</pre></table>
+  <li>Go to <kbd>tax</kbd> again, and load <kbd>Early.krona.html</kbd> and <kbd>Late.krona.html</kbd> in your Web browser. Using the two interactive pie charts, answer these questions:
+  <ul class="level2">
+    <li>What are two most abundant phyla in both early and late groups. You can uncheck &ldquo;Collapse&rdquo; to display full taxonomic ranks.
+    <li>What are two most abundant genera and their percentages in the early group? Answer the same question for the late group.
+  </ul>
+

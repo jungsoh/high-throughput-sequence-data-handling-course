@@ -1,0 +1,192 @@
+<html>
+
+<head>
+
+<title>657.000 Lab 2</title>
+<link rel="stylesheet" type="text/css" href="657.000.css">
+<link rel="stylesheet" type="text/css" href="sidenav.css">
+<script type="text/javascript" src="sidenav.js"></script>
+
+<body>
+
+<div id="mySidenav" class="sidenav">
+<a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+</div>
+
+<div id="main">
+
+<div class="labtitle">Lab 2&ensp;Sequence Assembly and Annotation</div>
+<div class="subtitle">657.000&ensp;High-Throughput Sequence Data Handling (SS 2017)</div>
+
+<span id="contents" onclick="openNav()">
+<span style="font-size:125%">&#9776;</span>&ensp;Contents
+</span>
+
+<div class="usectitle">Setup</div>
+<hr>
+<ol>
+  <li>In your Linux home directory, make a new directory called <kbd>lab2</kbd>. Do all your work in <kbd>lab2</kbd>.
+  <li>Copy these files from the <kbd>/export/data/657.000/assembly</kbd> directory to your <kbd>lab2</kbd> directory.
+  <ul class="level2">
+    <li><kbd>Bac1_L001_R1_001.fastq</kbd> and <kbd>Bac1_L001_R2_001.fastq</kbd>. These files contain a random subset (3%) of Illumina MiSeq paired-end reads from a bacterial DNA sample.
+    <li><kbd>Bac1_manifest.conf</kbd>. This is a MIRA configuration file, which contains settings to apply when you assemble the reads with MIRA assembler.
+    <li><kbd>run_spades</kbd>. This is a shell script to assemble the reads with SPAdes assembler.
+    <li><kbd>run_prokka</kbd>. This is a shell script to run Prokka annotation on an assembly.
+  </ul>
+  <li>Use the <kbd>less</kbd> command to view the contents of a file. Use <kbd>less -S</kbd> to chop long lines, and use left/right arrows to scroll left/right. Hit space to move forward one screen and hit <kbd>b</kbd> to move backward one screen.
+</ol>
+
+<div id="input" class="sectitle">Read data check</div>
+<hr>
+<ol>
+  <li>Refer to <a href="https://en.wikipedia.org/wiki/FASTQ_format" target="_blank">FASTQ format</a> to answer these questions about the read files:
+  <ul class="level2">
+    <li>How many lines comprise one read?  Use the command below to find the number of lines in the R1 file and divide it by the previous answer, which will give you the number of reads in the R1 file. 
+<p>
+<table class="command"><tr><td><pre>
+wc -l Bac1_L001_R1_001.fastq
+</pre></table>
+    <li>What is the symbol in the first character position of a read ID line? Use this symbol as part of the pattern to search for with the <kbd>grep</kbd> command, to find the total read count in the R1 file. For example, if &ldquo;X&rdquo; were the symbol (it definitely is not!), you would do the command below. Does the number agree with the previous count?
+<p>
+<table class="command"><tr><td><pre>
+grep ^X Bac1_L001_R1_001.fastq | wc -l
+</pre></table>
+    <li>What is the <i>total</i> number of reads we will process?
+    <li>From a read ID line alone, how can you tell if the read is a left (forward R1) read or a right (reverse, R2) read?
+  </ul>
+  <li>FastQC is a tool to examine the quality of reads in a FASTQ file. Run it on the read files:
+<p>
+<table class="command"><tr><td><pre>
+mkdir fastqc_out
+fastqc -o fastqc_out Bac1_L001_R1_001.fastq Bac1_L001_R2_001.fastq
+</pre></table>
+  <li>Go to the <kbd>fastqc_out</kbd> directory and load the FastQC HTML file for R1 onto your Web browser. Refer to the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help">FastQC documentation</a> if necessary.
+  <ul class="level2">
+    <li>Do all the R1 reads have the same length? If so, what is the length?
+    <li>What is the single most prevailing trend you notice from the &ldquo;Per base sequence quality&rdquo; section of the FastQC report for the R1 reads?
+    <li>Load the FastQC HTML file for R2 onto the Web browser and look at &ldquo;Per base sequence quality&rdquo;. Do you see the same sequence quality trend in the R2 reads as in the R1 reads? If so, is the trend stronger or weaker in the R2 reads than in the R1 reads?
+  </ul>
+</ol>
+
+<div id="mira" class="sectitle"><i>De novo</i> assembly with MIRA</div>
+<hr>
+<ol>
+  <li>Make sure you are in <kbd>lab2</kbd>. Assemble the raw reads into contigs using the MIRA assembler with this command:
+<p>
+<table class="command"><tr><td><pre>
+mira Bac1_manifest.conf > mira.log
+</pre></table>
+  <li>The assembly will take about 15 minutes, and the terminal may seem frozen, but MIRA is running. When it finishes, the <kbd>Bac1_assembly</kbd> directory will be there, with four subdirectories: 
+<p>
+<table class="tree"><tr><td><pre style="margin:0.5em;line-height: 60%">
+                 Bac1_assembly
+
+                       |
+     &horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;
+     |             |             |             |
+
+Bac1_d_chkpt  Bac1_d_info  Bac1_d_results  Bac1_d_tmp
+</pre></table>
+  <li>MIRA is slower than SPAdes, so skip the rest of this section, and start running SPAdes assembly in the next section. Come back here when MIRA finishes.
+  <li>Go to <kbd>Bac1_d_info</kbd> and find a file there that provides information about the assembly. View the contents of this file to answer these questions:
+  <ul class="level2">
+    <li>What percentage of the reads has been assembled?
+    <li>How many contigs were generated in total and what is the maximum contig size?
+    <li>Considering all contigs, what is the assembly (consensus) size and what is N50?
+  </ul>
+</ol>
+
+<div id="spades" class="sectitle"><i>De novo</i> assembly with SPAdes</div>
+<hr>
+<ol>
+  <li>In <kbd>lab2</kbd>, assemble the reads with the SPAdes assembler with this command:
+<p>
+<table class="command"><tr><td><pre>
+./run_spades > spades.log
+</pre></table>
+  <li>The assembly will take about 5 minutes. When it finishes, the <kbd>spades_out</kbd> directory will be there, where you can find the assembly results.
+  <li>Unlike MIRA, SPAdes produces only contigs and scaffolds without assembly statistics. You can use the QUAST tool to evaluate genome assemblies and generate statistics. In the <kbd>spades_out</kbd> directory, run QUAST on the FASTA file of contigs:
+<p>
+<table class="command"><tr><td><pre>
+quast.py -m 0 contigs.fasta
+</pre></table>
+  <li>Go to the <kbd>quast_results/latest</kbd> directory to find <kbd>report.html</kbd>. Load it in your Web browser. Use the statistics and plots to answer these questions;
+  <ul class="level2">
+    <li>How many contigs are shorter than 1000 bp?
+    <li>You will see both N50 and L50 numbers. What is N50 and how is L50 related to N50? 
+    <li>Use the &ldquo;Cumulative length&rdquo; plot to find the length of the assembly that can be generated with 20 largest contigs.
+    <li>Find the N75 and L75 values from the &ldquo;Nx&rdquo; plot. Use the same plot to obtain N90 and L90. 
+  </ul>
+
+</ol>
+
+<div id="viz" class="sectitle">Visualization of MIRA assembly</div>
+<hr>
+<ol>
+  <li>In <kbd>Bac1_d_results</kbd>, convert the full assembly result file from MAF format to  SAM format:
+<p>
+<table class="command"><tr><td><pre>
+miraconvert -f maf -t sam Bac1_out.maf Bac1_out.sam
+</pre></table>
+  <li>Open Tablet (command <kbd>tablet</kbd>). In &ldquo;Open Assembly&rdquo;, select <kbd>Bac1_out.sam</kbd> as the &ldquo;Primary assembly file&rdquo;, select <kbd>Bac1_out.padded.fasta</kbd> as the &ldquo;Reference/consensus file&rdquo;, and open the files.
+  <li>Once the files are loaded, use the left panel listing the contigs to answer these questions:
+  <ul class="level2">
+    <li>What is the average contig length and how many reads does a contig have on average? 
+    <li>How many contigs are shorter than 1000 bp?
+    <li>How many contigs have more than 100 reads? Use an appropriate filter.
+  </ul>
+  <li>The main panel on the right shows the (dark blue) coverage plot that shows how many read bases are assembled onto a contig base. Using the left contig panel and the right display panel together, answer these questions regarding only those contigs that have more than 100 reads:
+  <ul class="level2">
+    <li>Find the longest contig. How many reads were assembled into this contig? What is the maximum coverage depth of this contig? What is the average coverage depth?
+    <li>Answer the same questions for the shortest contig.
+  </ul>
+</ol>
+
+<div id="cmp" class="sectitle">Comparison of MIRA and SPAdes assemblies</div>
+<hr>
+<ol>
+  <li>In your <kbd>lab2</kbd> directory, make a subdirectory called <kbd>comparison</kbd> and go into the directory. Copy the contig FASTA file from MIRA (<kbd>Bac1_out.unpadded.fasta</kbd>) there and rename it to <kbd>MIRA_contigs.fasta</kbd>. Likewise, copy the SPAdes contig FASTA file (<kbd>contigs.fasta</kbd>) and rename it to <kbd>SPAdes_contigs.fasta</kbd>.
+  <li>Run QUAST on both contig files:
+<p>
+<table class="command"><tr><td><pre>
+quast.py -m 0 MIRA_contigs.fasta SPAdes_contigs.fasta
+</pre></table>
+  <li>Go to the <kbd>quast_results/latest</kbd> directory and load <kbd>report.html</kbd> in your Web browser. Answer these questions:
+  <ul class="level2">
+    <li>Based on the heatmap coloring, what is the general preference on the statistics?
+    <li>What is the most striking difference between the two assemblies?
+    <li>Use the &ldquo;Cumulative length&rdquo; plot to find the cumulative assembly lengths that can be reached with 10 largest contigs from SPAdes and 10 largest contigs from MIRA, respectively.
+  </ul>
+</ol>
+
+<div id="annot" class="sectitle">Assembly annotation with Prokka</div>
+<hr>
+<ol>
+  <li><a href="https://github.com/tseemann/prokka">Prokka</a> is a prokaryotic genome annotation pipeline. We will use it to annoate the MIRA and SPAdes assemblies we created. Run the annotation on the MIRA assembly first, and the results will be in the <kbd>mira_prokka_out</kbd> directory:
+<p>
+<table class="command"><tr><td><pre>
+./run_prokka mira
+</pre></table>
+<li>Now run the same command on the SPAdes assembly, which will save the output in the <kbd>spades_prokka_out</kbd> directory:
+<p>
+<table class="command"><tr><td><pre>
+./run_prokka spades
+</pre></table>
+  <li>Go to <kbd>mira_prokka_out</kbd> to answer these questions about the annotation of the MIRA assembly:
+  <ul class="level2">
+    <li>How many CDSs, rRNAs, and tRNAs were found? This information is in <kbd>Bac1.txt</kbd>, 
+    <li>How many &ldquo;hypothetical protein&rdquo;s were found? Use the <kbd>grep -c</kbd> command to search for this text in the protein sequence file <kbd>Bac1.faa</kbd> and count its occurrences.
+    <li>How many unique features can you find? Use this command:
+<p>
+<table class="command"><tr><td><pre>
+grep ">" Bac1.faa | cut -f2- -d' ' | sort | uniq | wc -l
+</pre></table>
+    <li>What is (are) the most abundant feature(s)? Use this command:
+<p>
+<table class="command"><tr><td><pre>
+grep ">" Bac1.faa | cut -f2- -d' ' | sort | uniq -c | sort -n
+</pre></table>
+  </ul>
+  <li>Go to <kbd>spades_prokka_out</kbd> and answer the same questions about the annotation of the SPAdes assembly.
+  <li>The MIRA and SPAdes assemblies differ significantly in their contig numbers and contig length distributions. Do you think this difference had a big effect on the annotations?
+</ol>

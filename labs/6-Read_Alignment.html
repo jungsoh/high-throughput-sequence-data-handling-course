@@ -1,0 +1,143 @@
+<html>
+
+<head>
+
+<title>657.000 Lab 6</title>
+<link rel="stylesheet" type="text/css" href="657.000.css">
+<link rel="stylesheet" type="text/css" href="sidenav.css">
+<script type="text/javascript" src="sidenav.js"></script>
+
+<body>
+
+<div id="mySidenav" class="sidenav">
+<a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+</div>
+
+<div id="main">
+
+<div class="labtitle">Lab 6&ensp;Read Alignment</div>
+<div class="subtitle">657.000&ensp;High-Throughput Sequence Data Handling (SS 2017)</div>
+
+<span id="contents" onclick="openNav()">
+<span style="font-size:125%">&#9776;</span>&ensp;Contents
+</span>
+
+<div class="usectitle">Setup</div>
+<hr>
+<ol>
+  <li>In your Linux home directory, create a new directory called <kbd>lab6</kbd>. Do all your work in this lab in <kbd>lab6</kbd>.
+  <li>We will use the <a href="https://en.wikipedia.org/wiki/Lambda_phage" target="_blank">lambda phage</a> reference genome and computer-generated reads. 
+  <li>Copy the two directories containing Bowtie2 example files <kbd>/export/data/657.00/alignment/reference</kbd> and <kbd>/export/data/657.000/alignment/reads</kbd> under your <kbd>lab6</kbd> directory. When you are in the <kbd>lab6</kbd> directory, copy those directories with these commands (note the <kbd>-r</kbd> option for copying everything under the source directory and the <kbd>.</kbd> for setting the current directory as the copy destination):
+<p>
+<table class="command"><tr><td><pre>
+cp -r /export/data/mol923/Bowtie2/reference .
+cp -r /export/data/mol923/Bowtie2/reads .
+</pre></table>
+  <li>In Bowtie and Bowtie2, an index is an indexed sequence database built from a reference genome, for efficient searching. Bowtie indices and Bowtie2 indices have different formats and are not interchangeable.
+</ol>
+
+<div id="index" class="sectitle">Reference database</div>
+<hr>
+<ol>
+  <li>To align reads, we need to create an index for the reference genome. In your <kbd>lab6</kbd> directory, use these commands to build an index for the sequence in <kbd>lambda_virus.fa</kbd> and name the index <kbd>lambda_virus</kbd>:
+<p>
+<table class="command"><tr><td><pre>
+mkdir index
+bowtie2-build reference/lambda_virus.fa index/lambda_virus
+</pre></table>
+  <li>Go to the <kbd>index</kbd> directory. How many files constitute the index? List the file name extensions that come after the index name itself (<kbd>lambda_virus</kbd>).
+  <li>You can use the <kbd>bowtie2-inspect</kbd> command to get information about (inspect) the index. Use it to find the number of bases in the reference genome.
+</ol>
+
+<div id="basic" class="sectitle">Types of alignment</div>
+<hr>
+<ol>
+  <li>Go back to <kbd>lab6</kbd>. Run the Bowtie2 aligner to align unpaired reads to the reference genome (represented by the index now):
+<p>
+<table class="command"><tr><td><pre>
+bowtie2 -x index/lambda_virus -U reads/reads_1.fq -S unpaired.sam &> unpaired.log
+</pre></table>
+  <li>View the summary of the alignment results in <kbd>unpaired.log</kbd>. What is the total number of reads? How many reads were aligned? What is the overall alignment rate?
+  <li>Run the alignment using the paired-end read information:
+<p>
+<table class="command"><tr><td><pre>
+bowtie2 -x index/lambda_virus -1 reads/reads_1.fq -2 reads/reads_2.fq -S paired.sam &> paired.log
+</pre></table>
+  <li>View the (very confusing) alignment summary in <kbd>paired.log</kbd>. Bowtie2 summary uses the terms &ldquo;reads&rdquo; and &ldquo;pairs&rdquo; inconsistently. Referring to the <a href="http://bowtie-bio.sourceforge.net/bowtie2/manual.shtml#concordant-pairs-match-pair-expectations-discordant-pairs-dont" target="_blank">concordant and discordant pairs</a> section of the Bowtie2 manual and using the tree below as an aid, show how the overall alignment rate was calculated. 
+<p>
+<table class="tree"><tr><td><pre style="margin:0.5em;line-height: 60%">
+           All pairs
+
+               |
+      &horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;
+      |                  |
+
+Pairs aligned     Pairs not aligned
+
+concordantly        concordantly
+
+                         |
+                &horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;
+                |                  |
+
+          Pairs aligned     Pairs not aligned
+
+          discordantly      <i>Reads = 2 x pairs</i>
+
+                                   |
+                          &horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;&horbar;
+                          |                  |
+
+                    Reads aligned     Reads not aligned
+</pre></table>
+  <li>Align the paired-end reads again, but this time in the <a href="http://bowtie-bio.sourceforge.net/bowtie2/manual.shtml#end-to-end-alignment-versus-local-alignment" target="_blank">&ldquo;local&rdquo; alignment</a> mode:
+<p>
+<table class="command"><tr><td><pre>
+bowtie2 --local -x index/lambda_virus -1 reads/reads_1.fq -2 reads/reads_2.fq -S paired.local.sam &> paired.local.log
+</pre></table>
+  <li>View <kbd>paired.local.log</kbd> and compare the overall alignment rate between the local alignment and the previous &ldquo;end-to-end&rdquo; alignment. Explain why the alignment rate increased with the local alignment.
+</ol>
+
+<div id="sam" class="sectitle">SAM and BAM files</div>
+<hr>
+<ol>
+  <li>The output from a Bowtie2 is in <a href="https://samtools.github.io/hts-specs/SAMv1.pdf">Sequence Alignment/Map (SAM) format</a>. Samtools is a collection of utilties for working with SAM files. Type <kbd>samtools</kbd> to see a summary of what one can do with Samtools. Type <kbd>samtools&nbsp;COMMAND</kbd> to read more details on how to use Samtools <kbd>COMMAND</kbd>. The <a href="http://www.htslib.org/doc/samtools.html">Samtools manual</a> gives full details.
+  <li>Use the Samtools <kbd>flagstat</kbd> command below to extract simple statistics of the (end-to-end) alignment using the paired-end reads. Does it confirm your overall alignment rate calculation using the Bowtie2 log information?
+<p>
+<table class="command"><tr><td><pre>
+samtools flagstat paired.sam
+</pre></table>
+  <li>Some Samtools command only works on sorted <a href="https://samtools.github.io/hts-specs/SAMv1.pdf">Binary Alignment/Map (BAM) format</a> files. Use the commands below to convert the SAM file to a BAM file and sort (by the leftmost reference coordinates):
+<p>
+<table class="command"><tr><td><pre>
+samtools view -b paired.sam > paired.bam
+samtools sort paired.bam > paired.sorted.bam
+</pre></table>
+  <li>If your SAM-to-BAM conversion followed by sorting was successful, the Samtools <kbd>depth</kbd> command below to show the coverage depth of every base in the genome should work:
+<p>
+<table class="command"><tr><td><pre>
+samtools depth paired.sorted.bam
+</pre></table>
+  <li>Run the Samtools <kbd>stats</kbd> command below to calculate more statistics of the same alignment:
+<p>
+<table class="command"><tr><td><pre>
+samtools stats paired.sorted.bam > paired.stats
+</pre></table>
+  <li>Find the information about coverage distribution in <kbd>paired.stats</kbd> (towards the end of file), which shows the frequency (number of genome bases) for each coverage depth (number of read bases aligned to a genome base). What is the most frequent coverage depth?
+  <li>Some Samtools commands further require that the input BAM file to be indexed for fast access. Index your sorted BAM file and check that <kbd>paired.sorted.bam.bai</kbd> has been created:
+<p>
+<table class="command"><tr><td><pre>
+samtools index paired.sorted.bam
+</pre></table>
+  <li>After indexing, you can apply many Samtools commands only on a certain region of the reference sequence. For example, adding the <kbd>-r</kbd> option to the Samtools <kbd>depth</kbd> command, where <kbd>REF</kbd> is the full reference sequence name, <kbd>FROM</kbd> is the start position, and <kbd>TO</kbd> is the end position, will show the coverage depth only between the start and end positions of the reference sequence. Use the command below to extract the depth information ony for the region between positions 1 and 1000 of the reference genome (replace <kbd>REF</kbd>, <kbd>FROM</kbd>, and <kbd>TO</kbd> with the actual name and numbers; enclose the reference sequence name within double quotes if it contains special characters):
+<p>
+<table class="command"><tr><td><pre>
+samtools depth -r REF:FROM-TO paired.sorted.bam
+</pre></table>
+</ol>
+
+<div id="tablet" class="sectitle">Alignment visualization</div>
+<hr>
+<ol>
+  <li>The Tablet viewer can also be used for viewing read alignments. We treat reference sequences as contigs (although they are not) just for the sake of visualization. Open Tablet, in &ldquo;Open Assembly&rdquo; select <kbd>paired.sam</kbd> (as if it were an assembly file) and select <kbd>lambda_virus.fa</kbd> as the reference.
+  <li>There will be only one contig, which is actually just the reference sequence. Select it and find the maximum coverage depth and the average coverage depth of the whole alignment.
